@@ -20,7 +20,7 @@ public class Lab1 {
       }
       TSimInterface tsi = TSimInterface.getInstance();
       TSimStream  tstr = new TSimStream(System.in);
-      tsi.setDebug(false);
+      tsi.setDebug(true);
 
       Train train1 = new Train(1, down); 
       Train train2 = new Train(2, up);
@@ -75,7 +75,7 @@ public class Lab1 {
          int tmpspeed = speed;
          setSpeed(0);
          try {
-            sleep(200 + 2 * simulationspeed * Math.abs(tmpspeed));
+            sleep(1000 + 2 * simulationspeed * Math.abs(tmpspeed));
          }
          catch (InterruptedException e) {}
          setSpeed(-tmpspeed);
@@ -214,10 +214,8 @@ public class Lab1 {
                      case 413:
                         if(direction == up){
                            waitUntilReady(2,3,11,2);
-                           semaphores[0].release();
                         } else {
                            semaphores[2].release();
-                           semaphores[0].acquire();
                         }
                         break;
                      case 611:
