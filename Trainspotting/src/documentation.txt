@@ -14,14 +14,18 @@ Sensors:
 
 In every threewaycross we placed 3 sensors, one for each way.
 This so that the train can come from any of the three ways in any direction and check if
-which path is free and if the train has to stop and wait for a free path.
+which path is free and if the train has to stop and wait for a free path. (The train would not have to stop if it was entering the threewaycross from
+the single lane, because then it would just choose path depending on which one of the two is free)
+
 For the fourwaycross we placed 4 sensors.
 Each of these sensors are so far away from a junction so if the train needs to stop it got time to do so
 without getting to a junction.
+
 For the upper part of the "takeover section" we placed two extra sensors as close to the junction as possible.
-That's so that the path can get set free when a train is about to leave it.
+That's so that the path can get set free at the right timing when a train is about to leave it.
 We also put sensors at the stations so the trains can stop and turn around.
 
+Sensors explained with semaphores is described in the code.
 
 Critical sections:
 
@@ -35,12 +39,13 @@ Trainspeed:
 The maximum allowed speed for the trains is 19.
 If it gets higher the trains will derail at the stations because our turning algoritm is built for the train not leaving the sensor when stopping. 
 With the speed 20 or higher, the train will leave the sensor, and then try to turn again, which results is a crash at the station. 
-
-Also they will no be able to stop before the junctions when they have to.
+Also they would not be able to stop before the junctions when they have to.
 
 Test:
 
 First we tested the extreme case scenarios. We put the trainspeed to 1 - 1, 1 - 19, 19 - 1 and 19 - 19.
-We let each test run for a couple of minutes without any problems.
-after that we started 15 simulations at once, all with random speed and let them run for 30 minutes.
-All the simulations 
+We let each test run for a quite a while without any problems.
+after that we started 15 simulations at once, all with random speed and let them run for 30 minutes without any problems.
+
+We had a rare case when the trains sometimes failed to turn at the station, but that was when simulation speed was set to 1 (and trainspeed 16<x<20), which should explain why
+it didn't recieve the commands. Otherwise it wouldn't make sense at all (since the trains always enter the turnsection at the stations at the same speed).
