@@ -40,5 +40,5 @@ Test:
 
 First we tested the extreme case scenarios. We put the trainspeed to 1 - 1, 1 - 19, 19 - 1 and 19 - 19.
 We let each test run for a couple of minutes without any problems.
-after that we started 8 simulations at once, all with random speed and let them run for 30 minutes.
+after that we started 15 simulations at once, all with random speed and let them run for 30 minutes.
 All the simulations 
