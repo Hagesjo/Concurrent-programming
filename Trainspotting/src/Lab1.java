@@ -107,11 +107,22 @@ public class Lab1 {
 
       @Override
       public void run() {
+            //We use 6 semaphores for the different areas.
+            //semaphores[0] is the cross at the top
+            //semaphores[1] is the bottom station
+            //semaphores[2] is the critical "onelinepath" after the bottom station 
+            //semaphores[3] is the top station
+            //semaphores[4] is the fastest path in the "choose-section" in the middle
+            //semaphores[5] is the critical "onelinepath" after the top station
+            //Everytime the path (semaphore) the train is about to enter is acquired, the train stops and waits for the semaphore to be released before starting again (exception below:)
+            
+            //We use tryAcquire everytime the train has to choose path,
+            //which means when the train is about to exit a critical path (and then doesn't have to stop
+            //If the semaphores then fails to be acquired, the train (well...the switch) simply chooses the other free path
          while (true) {
             try {
                SensorEvent sens = tsi.getSensor(id);
                if (sens.getStatus() == 1) {
-                     //Every case (sensor) is described in dokumentation.txt
                   switch (sens.getXpos() * 100 + sens.getYpos()) { //Makes a unique ID for every sensor
                      case 509:
                         if (direction == down) {
