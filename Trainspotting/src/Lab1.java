@@ -114,26 +114,17 @@ public class Lab1 {
             //semaphores[3] is the top station
             //semaphores[4] is the fastest path in the "choose-section" in the middle
             //semaphores[5] is the critical "onelinepath" after the top station
-            //Everytime the path (semaphore) the train is about to enter is acquired, the train stops and waits for the semaphore to be released before starting again (exception below:)
+            //Everytime the path (semaphore) the train is about to enter is acquired, the train stops and waits for the semaphore to be released before starting again (exception below):
             
             //We use tryAcquire everytime the train has to choose path,
-            //which means when the train is about to exit a critical path (and then doesn't have to stop
+            //which means when the train is about to exit a critical path (and then doesn't have to stop)
             //If the semaphores then fails to be acquired, the train (well...the switch) simply chooses the other free path
          while (true) {
             try {
                SensorEvent sens = tsi.getSensor(id);
                if (sens.getStatus() == 1) {
+                  //All cases are sorted according to the map (easier reading)
                   switch (sens.getXpos() * 100 + sens.getYpos()) { //Makes a unique ID for every sensor
-                     case 509:
-                        if (direction == down) {
-                           semaphores[4].release();
-                        }
-                     break;
-                     case 1409:
-                        if (direction == up) {
-                           semaphores[4].release();
-                        }
-                     break;
                      case 606: case 905:
                         if (direction == down) {
                            setSpeed(0);
@@ -143,6 +134,7 @@ public class Lab1 {
                            semaphores[0].release();
                         }
                      break;
+
                      case 1107: case 1008:
                         if (direction == up) {
                            setSpeed(0);
@@ -152,6 +144,24 @@ public class Lab1 {
                            semaphores[0].release();
                         }
                      break;
+
+                     case 1508:
+                        if (direction == down) {
+                           waitUntilReady(5,17,7,1);
+                        } else {
+                           semaphores[5].release();
+                        }
+                        break;
+
+                     case 1407:
+                        if (direction == down) {
+                           waitUntilReady(5,17,7,2);
+                           semaphores[3].release();
+                        } else {
+                           semaphores[5].release();
+                        }
+                        break;
+
                      case 1908:
                         if (direction == up) {
                            if (semaphores[3].tryAcquire()) {
@@ -171,7 +181,51 @@ public class Lab1 {
                            }
                         } 
                         break;
-                     
+
+                     case 1409:
+                        if (direction == up) {
+                           semaphores[4].release();
+                        }
+                     break;
+
+                     case 1209:
+                        if (direction == up) {
+                           waitUntilReady(5,15,9,2);
+                        } else {
+                           semaphores[5].release();
+                        }
+                        break;
+
+                     case 1310:
+                        if (direction == up) {
+                           waitUntilReady(5,15,9,1);
+                        } else {
+                           semaphores[5].release();
+                        }
+                        break;
+
+                     case 709:
+                        if (direction == down) {
+                           waitUntilReady(2,4,9,1);
+                        } else {
+                           semaphores[2].release();
+                        }
+                        break;
+
+                     case 610:
+                        if (direction == down) {
+                           waitUntilReady(2,4,9,2);
+                        } else {
+                           semaphores[2].release();
+                        }
+                        break;
+
+                     case 509:
+                        if (direction == down) {
+                           semaphores[4].release();
+                        }
+                     break;
+
                      case 209:
                         if (direction == up) {
                            if (semaphores[4].tryAcquire()) {
@@ -181,6 +235,7 @@ public class Lab1 {
                            }
                         } 
                         break;
+
                      case 110:
                         if (direction == down) {
                            if (semaphores[1].tryAcquire()) {
@@ -190,49 +245,7 @@ public class Lab1 {
                            }
                         }
                            break;
-                     case 1508:
-                        if (direction == down) {
-                           waitUntilReady(5,17,7,1);
-                        } else {
-                           semaphores[5].release();
-                        }
-                        break;
-                     case 1407:
-                        if (direction == down) {
-                           waitUntilReady(5,17,7,2);
-                           semaphores[3].release();
-                        } else {
-                           semaphores[5].release();
-                        }
-                        break;
-                     case 1209:
-                        if (direction == up) {
-                           waitUntilReady(5,15,9,2);
-                        } else {
-                           semaphores[5].release();
-                        }
-                        break;
-                     case 1310:
-                        if (direction == up) {
-                           waitUntilReady(5,15,9,1);
-                        } else {
-                           semaphores[5].release();
-                        }
-                        break;
-                     case 709:
-                        if (direction == down) {
-                           waitUntilReady(2,4,9,1);
-                        } else {
-                           semaphores[2].release();
-                        }
-                        break;
-                     case 610:
-                        if (direction == down) {
-                           waitUntilReady(2,4,9,2);
-                        } else {
-                           semaphores[2].release();
-                        }
-                        break;
+
                      case 413:
                         if(direction == up){
                            waitUntilReady(2,3,11,2);
@@ -240,6 +253,7 @@ public class Lab1 {
                            semaphores[2].release();
                         }
                         break;
+
                      case 611:
                         if(direction == up){
                            waitUntilReady(2,3,11,1);
@@ -248,6 +262,8 @@ public class Lab1 {
                            semaphores[2].release();
                         }
                         break;
+
+                        //Endstation-sensors. Makes the train reverse
                      case 1411: case 1413: case 1403: case 1405:
                         if (!turning) {
                            turnTrain();
