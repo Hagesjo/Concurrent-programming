@@ -1,0 +1,44 @@
+Our code got three main parts.
+The Lab1 part where we take care of the inputed arguments when the program starts.
+It also instantiates the two train threads.
+The train thread where each train gets id, direction and speed.
+
+And last our run where we got our switch solution.
+Here we give every sensore an id based on it's cordinates.
+And depending on sensor id, trian direction and free semaphores the trains take the best path possible at the time
+and stops when it has to.
+
+We only use 6 semaphores which isn't to many according to the lab pm.
+
+Sensors:
+
+In every threewaycross we placed 3 sensors, one for each way.
+This so that the train can come from any of the three ways in any direction and check if
+which path is free and if the train has to stop and wait for a free path.
+For the fourwaycross we placed 4 sensors.
+Each of these sensors are so far away from a junction so if the train needs to stop it got time to do so
+without getting to a junction.
+For the upper part of the "takeover section" we placed two extra sensors as close to the junction as possible.
+Thta's so that the path can get set free when a train is about to leave it.
+We also put sensors at the stations so the trains can stop and turn around.
+
+
+Critical sections:
+
+The railroad got two critical sections.
+It's the two "one rail" paths each side of the "takeover section".
+If a train wants to enter any of the paths they have to check if it's free, if it's not the train have to stop and wait for it to get free.
+
+
+Trainspeed:
+
+The maximum allowed speed for the trains is 19.
+If it gets higher the trains will derail at the stations beacuse the got to short distance to stop.
+Also they will no be able to stop before the junctions when they have to.
+
+Test:
+
+First we tested the extreme case scenarios. We put the trainspeed to 1 - 1, 1 - 19, 19 - 1 and 19 - 19.
+We let each test run for a couple of minutes without any problems.
+after that we started 8 simulations at once, all with random speed and let them run for 30 minutes.
+All the simulations 
