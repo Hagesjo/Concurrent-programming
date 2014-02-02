@@ -3,25 +3,22 @@ import java.util.concurrent.*;
 import java.util.HashMap;
 
 public class Lab1 {
-   private final int MAXSPEED = 15;
+   private final int MAXSPEED = 19;
    private int simulationspeed = 100;
    private final int down = 1;
    private final int up = -1;
-   Semaphore[] semaphores = new Semaphore[9];
+   Semaphore[] semaphores = new Semaphore[6];
 
    public static void main(String[] args) {
       new Lab1(args);
    }
 
    public Lab1(String[] args) {
-
       for (int i = 0; i < 9; i++) {
          semaphores[i] = new Semaphore(1,true);
       }
       TSimInterface tsi = TSimInterface.getInstance();
-      TSimStream  tstr = new TSimStream(System.in);
-      tsi.setDebug(true);
-
+      tsi.setDebug(false);
       Train train1 = new Train(1, down); 
       Train train2 = new Train(2, up);
       if (args.length == 3 ) { 
@@ -53,7 +50,7 @@ public class Lab1 {
          tsi = TSimInterface.getInstance();
          try {
             if (direction == down) {
-               semaphores[6].acquire();
+               semaphores[3].acquire();
             } else {
                semaphores[1].acquire();
             }
@@ -75,7 +72,7 @@ public class Lab1 {
          int tmpspeed = speed;
          setSpeed(0);
          try {
-            sleep(1000 + 2 * simulationspeed * Math.abs(tmpspeed));
+            sleep(2000 + 2 * simulationspeed * Math.abs(tmpspeed));
          }
          catch (InterruptedException e) {}
          setSpeed(-tmpspeed);
@@ -115,24 +112,24 @@ public class Lab1 {
                      case 606: case 905:
                         if (direction == down) {
                            setSpeed(0);
-                           semaphores[7].acquire();
+                           semaphores[0].acquire();
                            setSpeed(initspeed);
                         } else {
-                           semaphores[7].release();
+                           semaphores[0].release();
                         }
                      break;
                      case 1007: case 1008:
                         if (direction == up) {
                            setSpeed(0);
-                           semaphores[7].acquire();
+                           semaphores[0].acquire();
                            setSpeed(initspeed);
                         } else {
-                           semaphores[7].release();
+                           semaphores[0].release();
                         }
                      break;
                      case 1908:
                         if (direction == up) {
-                           if (semaphores[6].tryAcquire()) {
+                           if (semaphores[3].tryAcquire()) {
                               tsi.setSwitch(17,7,2);
                            } else {
                               tsi.setSwitch(17,7,1);
@@ -178,7 +175,7 @@ public class Lab1 {
                      case 1407:
                         if (direction == down) {
                            waitUntilReady(5,17,7,2);
-                           semaphores[6].release();
+                           semaphores[3].release();
                         } else {
                            semaphores[5].release();
                         }
@@ -246,4 +243,3 @@ public class Lab1 {
       }
    }
 }
-
