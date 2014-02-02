@@ -8,7 +8,7 @@ import java.util.HashMap;
 public class Lab1 {
    private int simulationspeed = 100;
    private final int MAXSPEED = 19;
-   private final int down = 1; //constant variables to keep track of which direction the train has
+   private final int down = 1; 
    private final int up = -1;
    Semaphore[] semaphores = new Semaphore[6];
 
@@ -77,7 +77,7 @@ public class Lab1 {
          /**
           * Turns the train. 
           * The function sets the speed to 0, then waits 2 seconds, and then
-          * sets the speed to the old speed (but backwards of course)
+          * sets the speed to the old speed reversed.
           */
       private void turnTrain() throws CommandException, InterruptedException {
          int tmpspeed = speed;
@@ -114,11 +114,13 @@ public class Lab1 {
             //semaphores[3] is the top station
             //semaphores[4] is the fastest path in the "choose-section" in the middle
             //semaphores[5] is the critical "onelinepath" after the top station
-            //Everytime the path (semaphore) the train is about to enter is acquired, the train stops and waits for the semaphore to be released before starting again (exception below):
+
+            //Everytime the train has completely left a path connected to a semaphore, this semaphore is released, and the new semaphore (the path the train entered) is (if possible) acquired.
+            //Everytime the path (semaphore) the train is about to enter already is acquired, the train stops and waits for the semaphore to be released before starting again (exception below):
             
             //We use tryAcquire everytime the train has to choose path,
-            //which means when the train is about to exit a critical path (and then doesn't have to stop)
-            //If the semaphores then fails to be acquired, the train (well...the switch) simply chooses the other free path
+            //which means when the train is about to exit a critical path, and therefore doesn't have to stop, it just has to choose path.
+            //If the semaphore for the default path fails to be acquired, the train (well...the switch) simply chooses the other free path
          while (true) {
             try {
                SensorEvent sens = tsi.getSensor(id);
