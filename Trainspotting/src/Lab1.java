@@ -14,7 +14,7 @@ public class Lab1 {
    }
 
    public Lab1(String[] args) {
-      for (int i = 0; i < 9; i++) {
+      for (int i = 0; i < 6; i++) {
          semaphores[i] = new Semaphore(1,true);
       }
       TSimInterface tsi = TSimInterface.getInstance();
