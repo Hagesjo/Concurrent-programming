@@ -9,9 +9,18 @@ public class Lab2 {
    private int simulationspeed = 100;
    private final int MAXSPEED = 19;
    private final int down = 1; 
-   private final Lock lock = new ReentrantLock();
    private final int up = -1;
-
+   private final Lock lock = new ReentrantLock();
+   private final Condition track0   = lock.newCondition();
+   private final Condition track1   = lock.newCondition();
+   private final Condition track2   = lock.newCondition();
+   private final Condition track3   = lock.newCondition();
+   private final Condition track4   = lock.newCondition();
+   private final Condition track5   = lock.newCondition();
+   private final Condition track6   = lock.newCondition();
+   private final Condition track7   = lock.newCondition();
+   private final Condition track8   = lock.newCondition();
+   private final Condition track9   = lock.newCondition();
 
 
    public static void main(String[] args) throws InterruptedException, CommandException{
@@ -20,9 +29,6 @@ public class Lab2 {
 
    public Lab2(String[] args) throws InterruptedException, CommandException {
 
-      for (int i = 0; i < 6; i++) {
-           Monitor+i.tostring() = new Monitorer();
-           }
       TSimInterface tsi = TSimInterface.getInstance();
       tsi.setDebug(ture);
       Train train1 = new Train(1, down); 
@@ -44,25 +50,6 @@ public class Lab2 {
       train1.start();
       train2.start();
    }
-
-   public class Monitorer extends Thread {
-	private final Lock lock = new ReentrantLock();
-	private final Condition track  = lock.newCondition();
-
-      public Monitorer(){
-      }
-
-      public void enter(Condition track){
-	lock.lock();
-	track.await();
-	lock.unlock();
-      }
-      public void leave(Condition track){
-	lock.lock();
-	track.signal();
-	lock.unlock();
-      }
-    }
 
    public class Train extends Thread {
       private int direction;
@@ -88,6 +75,16 @@ public class Lab2 {
       public void setSpeed(int speed) throws CommandException{
          this.speed = speed;
          tsi.setSpeed(id,speed);
+      }
+      public void enter(Condition track){
+	lock.lock();
+	track.await();
+	lock.unlock();
+      }
+      public void leave(Condition track){
+	lock.lock();
+	track.signal();
+	lock.unlock();
       }
 
       private void turnTrain() throws CommandException, InterruptedException {
