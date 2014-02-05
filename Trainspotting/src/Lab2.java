@@ -1,5 +1,5 @@
 import TSim.*;
-import java.util.concurrent.*;
+import java.util.concurrent.locks;
 import java.util.HashMap;
 
    /** 
@@ -10,12 +10,12 @@ public class Lab2 {
    private final int MAXSPEED = 19;
    private final int down = 1; 
    private final int up = -1;
-   Monitor monitor0 = new Monitor;
-   Monitor monitor1 = new Monitor;
-   Monitor monitor2 = new Monitor;
-   Monitor monitor3 = new Monitor;
-   Monitor monitor4 = new Monitor;
-   Monitor monitor5 = new Monitor;
+   Monitor monitor0 = new Monitor();
+   Monitor monitor1 = new Monitor();
+   Monitor monitor2 = new Monitor();
+   Monitor monitor3 = new Monitor();
+   Monitor monitor4 = new Monitor();
+   Monitor monitor5 = new Monitor();
 
 
 
@@ -26,7 +26,7 @@ public class Lab2 {
    public Lab2(String[] args) throws InterruptedException, CommandException {
 
       TSimInterface tsi = TSimInterface.getInstance();
-      tsi.setDebug(ture);
+      tsi.setDebug(true);
       Train train1 = new Train(1, down); 
       Train train2 = new Train(2, up);
       
@@ -87,7 +87,7 @@ public class Lab2 {
       private void waitUntilReady(Monitor track,int x, int y, int switchDirection) throws InterruptedException, CommandException {
 	    
             setSpeed(0);
-            while(!track.tryenter()){
+            while(!track.tryEnter()){
 		}
             setSpeed(initspeed);
             tsi.setSwitch(x,y, switchDirection);
@@ -128,7 +128,8 @@ public class Lab2 {
                      case 1107: case 1008:
                         if (direction == up) {
                            setSpeed(0);
-			   enter(track0);
+			   while(!monitor0.tryEnter()){
+				}
                            setSpeed(initspeed);
                         } else {
 			   monitor5.leave();
@@ -240,7 +241,7 @@ public class Lab2 {
                         if(direction == up){
                            waitUntilReady(monitor2,3,11,2);
                         } else {
-                           leave(track2);
+                           monitor2.leave();
                         }
                         break;
 
@@ -274,9 +275,9 @@ public class Lab2 {
       }
    }
  public class Monitor{
-	private final Lock lock = new ReentrantLock();
-	private final Condition critical = lock.newCondition();
-	private final boolean empty = true;
+	private Lock lock = new ReentrantLock();
+	private Condition critical = lock.newCondition();
+	private boolean empty = true;
 
  	public void enter(){
 		lock.lock();
