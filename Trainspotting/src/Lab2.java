@@ -61,9 +61,9 @@ public class Lab2 {
          this.direction = direction;
          tsi = TSimInterface.getInstance();
             if (direction == down) {
-               enter(track3);
+               monitor3.enter();
             } else {
-               enter(track1);
+               monitor1.enter();
             }
       }
       
@@ -84,10 +84,11 @@ public class Lab2 {
          turning = false;
       }
 
-      private void waitUntilReady(condition track,int x, int y, int switchDirection) throws InterruptedException, CommandException {
+      private void waitUntilReady(Monitor track,int x, int y, int switchDirection) throws InterruptedException, CommandException {
 	    
             setSpeed(0);
-            enter(track);
+            while(!track.tryenter()){
+		}
             setSpeed(initspeed);
             tsi.setSwitch(x,y, switchDirection);
       }
@@ -117,10 +118,10 @@ public class Lab2 {
                      case 606: case 905:
                         if (direction == down) {
                            setSpeed(0);
-			   enter(track0);
+			   while(!monitor0.tryEnter())
                            setSpeed(initspeed);
                         } else {
-			   leave(track0);
+			   monitor0.leave();
                         }
                      break;
 
@@ -130,106 +131,114 @@ public class Lab2 {
 			   enter(track0);
                            setSpeed(initspeed);
                         } else {
-			   leave(track5);
+			   monitor5.leave();
                         }
                      break;
 
                      case 1508:
                         if (direction == down) {
-                           waitUntilReady(track5,17,7,1);
+                           waitUntilReady(monitor5,17,7,1);
                         } else {
-			   leave(track5);
+			   monitor5.leave();
                         }
                         break;
 
                      case 1407:
                         if (direction == down) {
-                           waitUntilReady(track5,17,7,2);
-			   leave(track3);
+                           waitUntilReady(monitor5,17,7,2);
+			   monitor3.leave();
                         } else {
-			   track(track5);
+			   monitor5.leave();
                         }
                         break;
 
                      case 1908:
-                        if (direction == up) {
+                      if (direction == up) {
+                           if (monitor3.tryEnter()) {
                               tsi.setSwitch(17,7,2);
                            } else {
                               tsi.setSwitch(17,7,1);
                            }
+                        }
                         break;
                         
                      case 1709:
                         if (direction == down) {
+                           if (monitor4.tryEnter()) {
                               tsi.setSwitch(15,9,2);
                            } else {
                               tsi.setSwitch(15,9,1);
-                           } 
+                           }
+                        }
                         break;
 
                      case 1409:
                         if (direction == up) {
-			   leave(track4);
+			   monitor4.leave();
                         }
                      break;
 
                      case 1209:
                         if (direction == up) {
-                           waitUntilReady(track5,15,9,2);
+                           waitUntilReady(monitor5,15,9,2);
                         } else {
-			   leave(track5);
+			   monitor5.leave();
                         }
                         break;
 
                      case 1310:
                         if (direction == up) {
-                           waitUntilReady(track5,15,9,1);
+                           waitUntilReady(monitor5,15,9,1);
                         } else {
-			   leave(track5);
+			   monitor5.leave();
                         }
                         break;
 
                      case 709:
                         if (direction == down) {
-                           waitUntilReady(track2,4,9,1);
+                           waitUntilReady(monitor2,4,9,1);
                         } else {
-			   leave(track2);
+			   monitor2.leave();
                         }
                         break;
 
                      case 610:
                         if (direction == down) {
-                           waitUntilReady(track2,4,9,2);
+                           waitUntilReady(monitor2,4,9,2);
                         } else {
-			   leave(track2);
+			   monitor2.leave();
                         }
                         break;
 
                      case 509:
                         if (direction == down) {
-			   leave(track4);
+			   monitor4.leave();
                         }
                      break;
 
                      case 209:
-                        if (direction == up) {
+                    if (direction == up) {
+                           if (monitor4.tryEnter()) {
                               tsi.setSwitch(4,9,1);
-			} else {
+                           } else {
                               tsi.setSwitch(4,9,2);
                            }
+                        } 
                         break;
 
                      case 110:
                         if (direction == down) {
+                             if (monitor1.tryEnter()) {
                               tsi.setSwitch(3,11,1);
                            } else {
                               tsi.setSwitch(3,11,2);
                            }
+			}
                            break;
 
                      case 413:
                         if(direction == up){
-                           waitUntilReady(track2,3,11,2);
+                           waitUntilReady(monitor2,3,11,2);
                         } else {
                            leave(track2);
                         }
@@ -237,10 +246,10 @@ public class Lab2 {
 
                      case 611:
                         if(direction == up){
-                           waitUntilReady(track2,3,11,1);
-                           leave(track1);
+                           waitUntilReady(monitor2,3,11,1);
+                           monitor1.leave();
                         } else {
-			   leave(track2);
+			   monitor2.leave();
                         }
                         break;
 
@@ -266,17 +275,19 @@ public class Lab2 {
    }
  public class Monitor{
 	private final Lock lock = new ReentrantLock();
-	private final Condition critical   = lock.newCondition();
+	private final Condition critical = lock.newCondition();
 	private final boolean empty = true;
 
  	public void enter(){
 		lock.lock();
 		critical.await();
+		empty = false;
 		lock.unlock();
   	}
 	public void leave(){
 	lock.lock();
 	critical.signal();
+	empty = true;
 	lock.unlock();
  	}
 	public boolean tryEnter(){

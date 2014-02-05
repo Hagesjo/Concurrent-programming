@@ -10,17 +10,13 @@ public class Lab2 {
    private final int MAXSPEED = 19;
    private final int down = 1; 
    private final int up = -1;
-   private final Lock lock = new ReentrantLock();
-   private final Condition track0   = lock.newCondition();
-   private final Condition track1   = lock.newCondition();
-   private final Condition track2   = lock.newCondition();
-   private final Condition track3   = lock.newCondition();
-   private final Condition track4   = lock.newCondition();
-   private final Condition track5   = lock.newCondition();
-   private final Condition track6   = lock.newCondition();
-   private final Condition track7   = lock.newCondition();
-   private final Condition track8   = lock.newCondition();
-   private final Condition track9   = lock.newCondition();
+   Monitor monitor0 = new Monitor;
+   Monitor monitor1 = new Monitor;
+   Monitor monitor2 = new Monitor;
+   Monitor monitor3 = new Monitor;
+   Monitor monitor4 = new Monitor;
+   Monitor monitor5 = new Monitor;
+
 
 
    public static void main(String[] args) throws InterruptedException, CommandException{
@@ -76,16 +72,7 @@ public class Lab2 {
          this.speed = speed;
          tsi.setSpeed(id,speed);
       }
-      public void enter(Condition track){
-	lock.lock();
-	track.await();
-	lock.unlock();
-      }
-      public void leave(Condition track){
-	lock.lock();
-	track.signal();
-	lock.unlock();
-      }
+  
 
       private void turnTrain() throws CommandException, InterruptedException {
          int tmpspeed = speed;
@@ -100,7 +87,8 @@ public class Lab2 {
       private void waitUntilReady(condition track,int x, int y, int switchDirection) throws InterruptedException, CommandException {
 	    
             setSpeed(0);
-            enter(track);
+            while(!track.tryenter){
+		}
             setSpeed(initspeed);
             tsi.setSwitch(x,y, switchDirection);
       }
@@ -277,4 +265,32 @@ public class Lab2 {
          }
       }
    }
+ public class Monitor{
+	private final Lock lock = new ReentrantLock();
+	private final Condition critical   = lock.newCondition();
+	private final boolean empty = true;
+
+ 	public void enter(){
+		lock.lock();
+		critical.await();
+		lock.unlock();
+  	}
+	public void leave(){
+	lock.lock();
+	critical.signal();
+	lock.unlock();
+ 	}
+	public boolean tryEnter(){
+		boolean enterd = false;
+		if(empty){
+			enter();
+			enterd = true;
+			return enterd;		
+		}
+		else {
+			return enterd;
+		}
+	}
+	}
 }
+
