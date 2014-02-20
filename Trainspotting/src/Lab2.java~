@@ -1,5 +1,5 @@
 import TSim.*;
-import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 import java.util.HashMap;
 
    /** 
@@ -61,9 +61,9 @@ public class Lab2 {
          this.direction = direction;
          tsi = TSimInterface.getInstance();
             if (direction == down) {
-               monitor3.enter();
+               monitor3.occupated = false;
             } else {
-               monitor1.enter();
+               monitor1.occupated = false;
             }
       }
       
@@ -90,6 +90,7 @@ public class Lab2 {
             while(!track.tryEnter()){
 		}
             setSpeed(initspeed);
+		track.enter();
             tsi.setSwitch(x,y, switchDirection);
       }
 
@@ -118,8 +119,10 @@ public class Lab2 {
                      case 606: case 905:
                         if (direction == down) {
                            setSpeed(0);
-			   while(!monitor0.tryEnter())
+			   while(monitor0.tryEnter()){System.err.println("HEJ!!");
+				}
                            setSpeed(initspeed);
+				monitor0.enter();
                         } else {
 			   monitor0.leave();
                         }
@@ -275,33 +278,56 @@ public class Lab2 {
       }
    }
  public class Monitor{
-	private Lock lock = new ReentrantLock();
-	private Condition critical = lock.newCondition();
-	private boolean empty = true;
+	private boolean occupated;
+    	private final ReentrantLock lock = new ReentrantLock();
+   	private Condition empty = lock.newCondition();
 
- 	public void enter(){
-		lock.lock();
-		critical.await();
-		empty = false;
-		lock.unlock();
-  	}
-	public void leave(){
-	lock.lock();
-	critical.signal();
-	empty = true;
-	lock.unlock();
- 	}
-	public boolean tryEnter(){
-		boolean enterd = false;
-		if(empty){
-			enter();
-			enterd = true;
-			return enterd;		
-		}
-		else {
-			return enterd;
-		}
-	}
+	 public Monitor() {
+        this.occupated = false;
+    }
+
+    public void enter() {
+        lock.lock();
+        try {
+            if (this.occupated) {
+                this.empty.await();
+            }
+            occupated = true;
+        } catch (InterruptedException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void leave() {
+        lock.lock();
+        try {
+            this.empty.signal();
+            occupated = false;
+        } finally {
+            lock.unlock();
+        }
+    }
+    public boolean tryEnter() {
+        boolean ret;
+
+        lock.lock();
+        try {
+            if(!this.occupated) {
+                occupated = true;
+                ret = true;
+            } else {
+                ret = false;
+            }
+        } finally {
+            lock.unlock();
+        }
+        
+        return ret;
+    }
+
 	}
 }
 
