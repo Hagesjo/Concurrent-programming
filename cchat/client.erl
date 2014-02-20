@@ -10,19 +10,19 @@
 
 
 
-loop(ST) ->
+loop(St) ->
 	receive
 %%%%%%%%%%%%%%%
 %%%% Connect
 %%%%%%%%%%%%%%%
 	
-		{Pid, {connect, _Server}} ->
+		{From, {connect, _Server}} ->
 			Ref = make_ref(),
 			Pid ! {connect, self(), Ref , _Server},
 			receive
 				{Ref, ok} ->
-					From ! {ok};
-					ok;
+					From ! {ok},
+					ok
 					%%%%TODO%%%%%
 					%Fixa catcha%
 					%%%%error%%%%
@@ -32,13 +32,13 @@ loop(ST) ->
 %%%%%%%%%%%%%%%
 %%%% Disconnect
 %%%%%%%%%%%%%%%
-		{Pid, disconnect} ->
+		{From, disconnect} ->
 			Ref = make_ref(),
 			Pid ! {disconnect, self(), Ref},
 			receive
 				{Ref, ok} ->
-					From ! {ok};
-					ok;
+					From ! {ok},
+					ok
 					%%%%TODO%%%%%
 					%Fixa catcha%
 					%%%%error%%%%
@@ -47,13 +47,13 @@ loop(ST) ->
 %%%%%%%%%%%%%%
 %%% Join
 %%%%%%%%%%%%%%
-		{Pid, {join,_Channel}} ->
+		{From, {join,_Channel}} ->
 			Ref = make_ref(),
 			Pid ! {join, self(), Ref, _Channel},
 			receive
 				{Ref, ok} ->
-					From ! {ok};
-					ok;
+					From ! {ok},
+					ok
 					%%%%TODO%%%%%
 					%Fixa catcha%
 					%%%%error%%%%
@@ -62,13 +62,13 @@ loop(ST) ->
 %%%%%%%%%%%%%%%
 %%%% Leave
 %%%%%%%%%%%%%%%
-		{Pid, {leave, _Channel}} ->
+		{From, {leave, _Channel}} ->
 			Ref = make_ref(),
 			Pid ! {leave, self(), Ref, _Channel},
 			receive
 				{Ref, ok} ->
-					From ! {ok};
-					ok;
+					From ! {ok},
+					ok
 					%%%%TODO%%%%%
 					%Fixa catcha%
 					%%%%error%%%%
@@ -77,13 +77,13 @@ loop(ST) ->
 %%%%%%%%%%%%%%%%%%%%%
 %%% Sending messages
 %%%%%%%%%%%%%%%%%%%%%
-		{Pid, {msg_from_GUI, _Channel, _Msg}} ->
+		{From, {msg_from_GUI, _Channel, _Msg}} ->
 			Ref = make_ref(),
 			Pid ! {msg_from_GUI, self(), Ref, _Channel, _Msg},
 			receive
 				{Ref, ok} ->
-					From ! {ok};
-					ok;
+					From ! {ok},
+					ok
 					%%%%TODO%%%%%
 					%Fixa catcha%
 					%%%%error%%%%
@@ -93,13 +93,13 @@ loop(ST) ->
 %%%%%%%%%%%%%%
 %%% WhoIam
 %%%%%%%%%%%%%%
-		{Pid, whoiam} ->
+		{From, whoiam} ->
 			Ref = make_ref(),
 			Pid ! {whoiam, self(), Ref},
 			receive
 				{Ref, ok} ->
-					From ! {ok};
-					ok;
+					From ! {ok},
+					ok
 					%%%%TODO%%%%%
 					%Fixa catcha%
 					%%%%error%%%%
@@ -108,13 +108,13 @@ loop(ST) ->
 %%%%%%%%%%
 %%% Nick
 %%%%%%%%%%
-		{Pid, {nick, _Nick}} ->
+		{From, {nick, _Nick}} ->
 			Ref = make_ref(),
 			Pid ! {nick, self(), Ref, _Nick},
 			receive
 				{Ref, ok} ->
-					From ! {ok};
-					ok;
+					From ! {ok},
+					ok
 					%%%%TODO%%%%%
 					%Fixa catcha%
 					%%%%error%%%%
@@ -123,7 +123,7 @@ loop(ST) ->
 %%%%%%%%%%%%%
 %%% Debug
 %%%%%%%%%%%%%
-		{Pid, debug} ->
+		{From, debug} ->
 			Ref = make_ref(),
 			{St, St}
 	end.
@@ -145,5 +145,4 @@ decompose_msg(_MsgFromClient) ->
 
 
 initial_state(Nick, GUIName) ->
-	NewUser = orddict:store(Nick,#user{nick=nick}),
     #cl_st { gui = GUIName }.

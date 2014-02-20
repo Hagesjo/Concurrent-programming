@@ -5,7 +5,7 @@
 
 %%-record(state, {server}).
 
-loop(St = #state{}) -> 
+loop(St) -> 
     receive
 	{connect, From, Ref, _Server} ->
 				
@@ -19,6 +19,6 @@ loop(St = #state{}) ->
 	{msg_from_GUI, From, Ref, _Channel, _Msg} ->
 		%%%%%TODO%%%%%
 	{nick, From, Ref, _Nick} ->
-
+		%%%%%TODO%%%%%
 initial_state(_Server) ->
     #server_st{}.
