@@ -3,9 +3,22 @@
 
 -include_lib("./defs.hrl").
 
-loop(St, _Msg) -> 
-    {ok, St}. 
+%%-record(state, {server}).
 
+loop(St = #state{}) -> 
+    receive
+	{connect, From, Ref, _Server} ->
+				
+
+	{disconnect, From, Ref} ->
+		%%%%%TODO%%%%%
+	{join, From, Ref, _Channel} ->
+		%%%%%TODO%%%%%
+	{leave, From, Ref, _Channel} ->
+		%%%%%TODO%%%%%
+	{msg_from_GUI, From, Ref, _Channel, _Msg} ->
+		%%%%%TODO%%%%%
+	{nick, From, Ref, _Nick} ->
 
 initial_state(_Server) ->
     #server_st{}.
