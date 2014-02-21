@@ -8,7 +8,7 @@
 loop(St) -> 
     receive
 	{connect, From, _Nick,} ->
-		St2 = St#server_st.( users = [{From, _Nick} | St#server_st.users]),
+		St2 = St#server_st( users = [{From, _Nick} | St#server_st.users]),
 		case lists:member({_, _Nick}, St#server_st.users) of
 			true ->
 				{nick_exist, St}
@@ -25,7 +25,7 @@ loop(St) ->
 			true ->
 				case St#cl_st.channels == Empty
 					true ->
-						St2 = St#server_st.(users = lists:delete({From, _Nick}, St#server_st.users)),
+						St2 = St#server_st(users = lists:delete({From, _Nick}, St#server_st.users)),
 						{ok, St2};
 					false ->
 						{leave_channels_first, St}
