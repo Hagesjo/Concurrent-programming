@@ -11,7 +11,7 @@ loop(St) ->
 		St2 = St#server_st.( users = [{From, _Nick} | St#server_st.users]),
 		case lists:member({_, _Nick}, St#server_st.users) of
 			true ->
-				{nick_exist, St}
+				{nick_exist, St};
 		end;
 			
 		case lists:member({From, _Nick}, St#server_st.users) of
@@ -21,19 +21,7 @@ loop(St) ->
 				{ok, St2}
 		end;
 	{disconnect, From, _Nick} ->
-		case lists:member({From, _Nick}, St#server_st.users) of
-			true ->
-				case St#cl_st.channels == Empty
-					true ->
-						St2 = St#server_st.(users = lists:delete({From, _Nick}, St#server_st.users)),
-						{ok, St2};
-					false ->
-						{leave_channels_first, St}
-				end;
-			false ->
-				{user_not_connected, St}
-		end;
-
+		St2 = St#server_st.(users = lists:delete({From, _Nick}, St#server_st.users))
 		
 	{join, From, Ref, _Channel} ->
 		%%%%%TODO%%%%%
