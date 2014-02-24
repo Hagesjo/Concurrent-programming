@@ -9,17 +9,20 @@
 %%%% Connect
 %%%%%%%%%%%%%%%
 loop(St, {connect, _Server}) ->
-			Ref = genserver:request(list_to_atom(_Server), {connect, self(), St#cl_st.nick}), 
-			case Ref of
-				ok ->
-					{ok, St#cl_st{server = _Server}};
-				nick_exist ->
-					{{error, nick_exist, "Nick exist"}, St};			
-				user_already_connected ->
-					{{error, user_already_connected, "User already connected"},St};
-				server_not_reached ->
-					{{error, server_not_reached, "Server not reached"},St}
-			end;		
+    case whereis(list_to_atom(_Server)) of
+        undefined -> {{error,server_not_reached, "Server not reached"}, St};
+        _ ->
+            case genserver:request(list_to_atom(_Server), {connect, self(), St#cl_st.nick}) of
+                ok ->
+                    {ok, St#cl_st{server = _Server}};
+                nick_exist ->
+                    {{error, nick_exist, "Nick exist"}, St};			
+                user_already_connected ->
+                    {{error, user_already_connected, "User already connected"},St};
+                server_not_reached ->
+                    {{error, server_not_reached, "Server not reached"},St}
+            end		
+        end;
 					
 
 %%%%%%%%%%%%%%%
@@ -47,13 +50,21 @@ loop(St, disconnect) ->
 %%%%%%%%%%%%%%
 %%% Join
 %%%%%%%%%%%%%%
-%		{St, {join,_Channel}} ->
+loop(St, {join,_Channel}) ->
+    case lists:member(_Channel, St#cl_st.channels) of
+        true -> {{error, user_already_joined, "You are already connected to that channel!"}, St};
+        _    -> {ok, St#cl_st{channels = [_Channel | St#cl_st.channels]}}
+    end;
 
 			
 %%%%%%%%%%%%%%%
 %%%% Leave
 %%%%%%%%%%%%%%%
-%		{St, {leave, _Channel}} ->
+loop(St, {leave,_Channel}) ->
+    case lists:member(_Channel, St#cl_st.channels) of
+        false -> {{error, user_not_joined, "You are not in that channel!"}, St};
+        true ->  {ok, St#cl_st{channels = lists:delete(_Channel,St#cl_st.channels)}}
+    end;
 	
 %%%%%%%%%%%%%%%%%%%%%
 %%% Sending messages
@@ -65,14 +76,21 @@ loop(St, disconnect) ->
 %%%%%%%%%%%%%%
 %%% WhoIam
 %%%%%%%%%%%%%%
-%		{St, whoiam} ->
+loop(St, whoiam) ->
+    {St#cl_st.nick, St};
 
 
 %%%%%%%%%%
 %%% Nick
 %%%%%%%%%%
 loop(St, {nick, _Nick}) ->
-    {ok, St#cl_st{nick = _Nick}};
+    case St#cl_st.server of 
+        [] ->
+            {ok, St#cl_st{nick = _Nick}};
+        _  -> 
+            {{error, nick_change_error, "You cannot change nickname while connected to the server"}, St}
+    end;
+
 
 
 %%%%%%%%%%%%%
@@ -97,4 +115,4 @@ decompose_msg(_MsgFromClient) ->
 
 
 initial_state(Nick, GUIName) ->
-    #cl_st { gui = GUIName }.
+    #cl_st { gui = GUIName ,server=[],nick=Nick, channels=[]}.
