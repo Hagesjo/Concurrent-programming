@@ -6,39 +6,28 @@
 
 
 
-loop(St, Data) -> 
-    case Data of
-	{connect, From, _Nick} ->
-		%St2 = St#server_st{users = [From | St#server_st.users], nick = [_Nick | St#server_st.nick]},
-		case lists:member( _Nick, St#server_st.nick) of
+loop(St, {connect, From, _Nick}) -> 
+        St2 = St#server_st{users = [From | St#server_st.users], nick = [_Nick | St#server_st.nick]},
+		case lists:member(From, St#server_st.users) of
 			true ->
-				{nick_exist, St};
+                {user_already_connected, St};
             false ->
-                case lists:member(From, St#server_st.users) of
+                case lists:member( _Nick, St#server_st.nick) of
                     true ->
-                        {user_already_connected, St};
+                        {nick_exist, St};
                     false -> 
-                        io:format("DIN MAMMA ÄR EN HORA", []),
-                        {ok, St}
+                        erlang:display(St2),
+                        {ok, St2}
                 end
 		end;
 
-    {disconnect, From, _Nick} ->
-        case lists:member({From, _Nick}, St#server_st.users) of
+loop(St, {disconnect, From, _Nick}) -> 
+        case lists:member(From, St#server_st.users) of
             true ->
-                case St#cl_st.channels == [] of
-                    true ->
-                        St2 = St#server_st{users = lists:delete(From, St#server_st.users),
-                                            nick = lists:delete(_Nick,St#server_st.nick)},
-                        %St2 = lists:delete({From, _Nick}, St#server_st.users),
-                        {ok, St2};
-                    false ->
-                        {leave_channels_first, St}
-                end;
-            false ->
-                {user_not_connected, St}
-        end 
-     end.
+                    St2 = St#server_st{users = lists:delete(From, St#server_st.users),
+                                        nick = lists:delete(_Nick,St#server_st.nick)},
+                    {ok, St2}
+        end.
 
 		
 	%{join, From, Ref, _Channel} ->
@@ -50,4 +39,4 @@ loop(St, Data) ->
 	%{nick, From, Ref, _Nick} ->
 		%%%%%%TODO%%%%%
 initial_state(_Server) ->
-    #server_st{name = _Server, users = [], nick = []}.
+    #server_st{name = _Server, users = [], nick = [], channels=[]}.

@@ -5,10 +5,6 @@
 -include_lib("./defs.hrl").
 
 
-
-
-
-
 %%%%%%%%%%%%%%%
 %%%% Connect
 %%%%%%%%%%%%%%%
@@ -30,16 +26,22 @@ loop(St, {connect, _Server}) ->
 %%%% Disconnect
 %%%%%%%%%%%%%%%
 loop(St, disconnect) ->
-	Ref = genserver:request(St#cl_st.server, {disconnect, self(), St#cl_st.nick}),
-	case Ref of
-		ok ->
-			St2 = St#cl_st{server = []},
-			{ok,St2 };
-		user_not_connected ->
-			{{error, user_not_connected, "User not connected"}, St};
-		leave_channels_first ->
-			{{error, leave_channels_first, "Leave all channels first"}, St}
-    end;
+    case St#cl_st.server of
+        [] ->  
+            {{error, user_not_connected, "User not connected"}, St};
+        _ ->  
+            case genserver:request(list_to_atom(St#cl_st.server),
+                                     {disconnect,
+                                      self(),
+                                       St#cl_st.nick}) of
+            ok ->
+                St2 = St#cl_st{server = []},
+                {ok,St2 };
+            leave_channels_first ->
+                {{error, leave_channels_first, "Leave all channels first"}, St}
+        end
+   end;
+        
         
 
 %%%%%%%%%%%%%%
@@ -69,7 +71,8 @@ loop(St, disconnect) ->
 %%%%%%%%%%
 %%% Nick
 %%%%%%%%%%
-%		{St, {nick, _Nick}} ->
+loop(St, {nick, _Nick}) ->
+    {ok, St#cl_st{nick = _Nick}};
 
 
 %%%%%%%%%%%%%
