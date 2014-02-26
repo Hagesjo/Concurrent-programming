@@ -10,4 +10,4 @@
 % This record defines the structure of the 
 % server process. 
 % 
--record(server_st, {name, users, nick}).
+-record(server_st, {name, users, nicks, channels}).
