@@ -64,9 +64,10 @@ loop(St, {leave, From, _Channel, _Nick}) ->
      end;
 
         
-loop(St,{msg_from_GUI, From, Ref, _Channel, _Msg}) ->
+loop(St,{msg_from_GUI, From, _Channel, _Msg}) ->
+    Ref = make_ref(),
+    get(_Channel) ! {msg_from_GUI, Ref,  From, _Msg},
     {ok, St}.
-		%%%%%%TODO%%%%%
 
 channel(Nicks) -> 
     receive 
@@ -88,7 +89,11 @@ channel(Nicks) ->
                 true -> 
                     From ! ok,
                     channel(lists:delete(Nick, Nicks))
-            end
+            end;
+
+        {msg_from_GUI, Ref, From, Nick, _Msg} -> 
+           SendTo = lists:delete(Nick, Nicks),
+           [genserver:request(From, {get_keys(self()), N, _Msg}) || N <- SendTo]
     end.
 
 initial_state(_Server) ->
