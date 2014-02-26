@@ -7,40 +7,37 @@
 
 
 loop(St, {connect, From, _Nick}) -> 
-        St2 = St#server_st{users = [From | St#server_st.users], nicks = [_Nick | St#server_st.nicks]},
-		case lists:member(From, St#server_st.users) of
-			true ->
-                {user_already_connected, St};
+        St2 = St#server_st{users = [{From, _Nick} | St#server_st.users]},
+		case lists:keyfind(From, 1, St#server_st.users) of
             false ->
-                case lists:member( _Nick, St#server_st.nicks) of
-                    true ->
-                        {nick_exist, St};
+                case lists:keyfind(_Nick, 2, St#server_st.users) of
                     false -> 
-                        erlang:display(St2),
-                        {ok, St2}
-                end
+                        {ok, St2};
+                    _ ->
+                        {nick_exist, St}
+                end;
+			_ ->
+                {user_already_connected, St}
 		end;
 
 loop(St, {disconnect, From, _Nick}) -> 
-        case lists:member(From, St#server_st.users) of
+        case lists:member({From, _Nick}, St#server_st.users) of
             true ->
-                    St2 = St#server_st{users = lists:delete(From, St#server_st.users),
-                                        nicks = lists:delete(_Nick,St#server_st.nicks)},
+                    St2 = St#server_st{users = lists:delete({From, _Nick}, St#server_st.users)},
                     {ok, St2}
         end;
 
 		
 loop(St, {join, From, _Channel, _Nick}) ->
+        Ref = make_ref(),
         case lists:member(_Channel, St#server_st.channels) of
             false ->
-                 io:format("~n~n~n~n~nFALSE",[]),
                  Pid = spawn(fun() -> channel([_Nick]) end),
                  Pid ! {join, self(),  _Nick},
                  put(_Channel, Pid), 
                  {ok, St#server_st{channels = [_Channel | St#server_st.channels]}};
             true -> 
-                 Ref = make_ref(),
-                 get(_Channel) ! {join,Ref, self(), _Nick},
+                 get(_Channel) ! {join, From, Ref, _Nick},
                  receive 
                      {ok,Ref} -> 
                         {ok, St};
@@ -64,14 +61,13 @@ loop(St, {leave, From, _Channel, _Nick}) ->
      end;
 
         
-loop(St,{msg_from_GUI, From, _Channel, _Msg}) ->
-    Ref = make_ref(),
-    get(_Channel) ! {msg_from_GUI, Ref,  From, _Msg},
+loop(St,{msg_from_GUI, From, Nick, _Channel, _Msg}) ->
+    get(_Channel) ! {msg_from_GUI, Nick, From, _Msg},
     {ok, St}.
 
 channel(Nicks) -> 
     receive 
-       {join, Ref, From, Nick} -> 
+       {join, From, Ref, Nick} -> 
             case lists:member(Nick, Nicks) of
                 true -> 
                     From ! {user_already_joined, Ref},
@@ -91,10 +87,10 @@ channel(Nicks) ->
                     channel(lists:delete(Nick, Nicks))
             end;
 
-        {msg_from_GUI, Ref, From, Nick, _Msg} -> 
+        {msg_from_GUI, Nick, From, _Msg} -> 
            SendTo = lists:delete(Nick, Nicks),
-           [genserver:request(From, {get_keys(self()), N, _Msg}) || N <- SendTo]
+           [genserver:request(From, {self(), N, _Msg}) || N <- SendTo]
     end.
 
 initial_state(_Server) ->
-    #server_st{name = _Server, users = [], nicks = [], channels=[]}.
+    #server_st{name = _Server, users = [], channels=[]}.

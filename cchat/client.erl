@@ -12,7 +12,7 @@ loop(St, {connect, _Server}) ->
     case whereis(list_to_atom(_Server)) of
         undefined -> {{error,server_not_reached, "Server not reached"}, St};
         _ ->
-            case genserver:request(list_to_atom(_Server), {connect, St#cl_st.gui, St#cl_st.nick}) of
+            case genserver:request(list_to_atom(_Server), {connect, self(), St#cl_st.nick}) of
                 ok ->
                     {ok, St#cl_st{server = _Server}};
                 nick_exist ->
@@ -35,7 +35,7 @@ loop(St, disconnect) ->
         _ ->  
             case genserver:request(list_to_atom(St#cl_st.server),
                                      {disconnect,
-                                      St#cl_st.gui,
+                                      self(),
                                        St#cl_st.nick}) of
             ok ->
                 St2 = St#cl_st{server = []},
@@ -114,7 +114,7 @@ loop(St = #cl_st { gui = GUIName }, _MsgFromClient) ->
 %%%%%%%%%%%%%%%%%%%%%
 loop(St, {msg_from_GUI, _Channel, _Msg}) ->
     case genserver:request(list_to_atom(St#cl_st.server),
-                           {msg_from_GUI, St#cl_st.gui, _Channel, _Msg}) of
+                           {msg_from_GUI, self(), St#cl_st.nick, _Channel, _Msg}) of
         ok  -> {ok, St};
         _ -> {{error, user_not_joined, "You are not in that channel!"}, St}
     end.
