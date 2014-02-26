@@ -33,26 +33,34 @@ loop(St, {disconnect, From, _Nick}) ->
 loop(St, {join, From, _Channel, _Nick}) ->
         case lists:member(_Channel, St#server_st.channels) of
             false ->
+                 io:format("~n~n~n~n~nFALSE",[]),
                  Pid = spawn(fun() -> channel([_Nick]) end),
-                 register(list_to_atom(_Channel), Pid), 
                  Pid ! {join, self(),  _Nick},
+                 put(_Channel, Pid), 
                  {ok, St#server_st{channels = [_Channel | St#server_st.channels]}};
             true -> 
-                 Reply = whereis(list_to_atom(_Channel)) ! {join, self(), _Nick},
-                 case Reply of
-                     ok -> 
+                 Ref = make_ref(),
+                 get(_Channel) ! {join,Ref, self(), _Nick},
+                 receive 
+                     {ok,Ref} -> 
                         {ok, St};
-                     user_already_joined -> 
-                        {{error, user_already_joined, "You are already connected to that channel!"}, St}
-
+                     {user_already_joined,Ref} -> 
+                        {user_already_joined, St}
                  end
         end;
+
 loop(St, {leave, From, _Channel, _Nick}) ->
-     case whereis(list_to_atom(_Channel)) ! {leave, self(), _Nick} of
-         ok -> 
-            {ok, St};
-         user_not_joined -> 
-            {{error, user_not_joined, "You are not in that channel!"}, St}
+     case lists:member(_Channel, St#server_st.channels) of
+     true ->
+         get(_Channel) ! {leave, self(), _Nick}, 
+         receive
+             ok -> 
+                {ok, St};
+             user_not_joined -> 
+                {user_not_joined, St}
+         end;
+     false ->
+         {user_not_joined, St}
      end;
 
         
@@ -62,23 +70,24 @@ loop(St,{msg_from_GUI, From, Ref, _Channel, _Msg}) ->
 
 channel(Nicks) -> 
     receive 
-       {join, From, Nick} -> 
+       {join, Ref, From, Nick} -> 
             case lists:member(Nick, Nicks) of
                 true -> 
-                    From ! user_already_joined,
+                    From ! {user_already_joined, Ref},
                     channel(Nicks);
                 false -> 
-                    channel([Nick | Nicks]),
-                    From ! ok
+                    From ! {ok, Ref},
+                    channel([Nick | Nicks])
             end;
+
        {leave, From, Nick} ->
             case lists:member(Nick, Nicks) of
                 false -> 
                     From ! user_not_joined,
                     channel(Nicks);
                 true -> 
-                    channel(lists:delete(Nick)),
-                    From ! ok
+                    From ! ok,
+                    channel(lists:delete(Nick, Nicks))
             end
     end.
 

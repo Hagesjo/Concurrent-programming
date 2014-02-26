@@ -57,8 +57,10 @@ loop(St, {join,_Channel}) ->
     _  -> 
         case genserver:request(list_to_atom(St#cl_st.server),
                                            {join, self(), _Channel, St#cl_st.nick}) of
-            user_already_joined -> {{error, user_already_joined, "You are already connected to that channel!"}, St};
-            _    -> {ok, St#cl_st{channels = [_Channel | St#cl_st.channels]}}
+            ok    -> 
+                {ok, St#cl_st{channels = [_Channel | St#cl_st.channels]}};
+            user_already_joined ->
+                {{error, user_already_joined, "You are already connected to that channel!"}, St}
         end
     end;
 
