@@ -51,9 +51,15 @@ loop(St, disconnect) ->
 %%% Join
 %%%%%%%%%%%%%%
 loop(St, {join,_Channel}) ->
-    case lists:member(_Channel, St#cl_st.channels) of
-        true -> {{error, user_already_joined, "You are already connected to that channel!"}, St};
-        _    -> {ok, St#cl_st{channels = [_Channel | St#cl_st.channels]}}
+    case St#cl_st.server of
+    [] ->
+        {{error, user_not_connected, "User not connected"}, St};
+    _  -> 
+        case genserver:request(list_to_atom(St#cl_st.server),
+                                           {join, self(), _Channel, St#cl_st.nick}) of
+            user_already_joined -> {{error, user_already_joined, "You are already connected to that channel!"}, St};
+            _    -> {ok, St#cl_st{channels = [_Channel | St#cl_st.channels]}}
+        end
     end;
 
 			
@@ -61,15 +67,21 @@ loop(St, {join,_Channel}) ->
 %%%% Leave
 %%%%%%%%%%%%%%%
 loop(St, {leave,_Channel}) ->
-    case lists:member(_Channel, St#cl_st.channels) of
-        false -> {{error, user_not_joined, "You are not in that channel!"}, St};
-        true ->  {ok, St#cl_st{channels = lists:delete(_Channel,St#cl_st.channels)}}
+        case genserver:request(list_to_atom(St#cl_st.server),
+                                           {leave, self(), _Channel, St#cl_st.nick}) of
+        ok ->  {ok, St#cl_st{channels = lists:delete(_Channel,St#cl_st.channels)}};
+        _ -> {{error, user_not_joined, "You are not in that channel!"}, St}
     end;
 	
 %%%%%%%%%%%%%%%%%%%%%
 %%% Sending messages
 %%%%%%%%%%%%%%%%%%%%%
-%		{St, {msg_from_GUI, _Channel, _Msg}} ->
+loop(St, {msg_from_GUI, _Channel, _Msg}) ->
+    case genserver:request(list_to_atom(St#cl_st.server),
+                           {leave, self(), _Channel, St#cl_st.nick}) of
+        ok  -> {ok, St};
+        _ -> {{error, user_not_joined, "You are not in that channel!"}, St}
+    end;
 
 
 
