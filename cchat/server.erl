@@ -39,9 +39,10 @@ loop(St, {join, From, _Channel, _Nick}) ->
 		%%%%%%TODO: ALLT%%%%%
 loop(St, {leave, From, _Channel, _Nick}) ->
 		%%%%%%TODO: ALLT%%%%%
-    {ok, St}.
+    {ok, St};
 		%%%%%%TODO%%%%%
-	%{msg_from_GUI, From, Ref, _Channel, _Msg} ->
+loop(St,{msg_from_GUI, From, Ref, _Channel, _Msg}) ->
+    {ok, St}.
 		%%%%%%TODO%%%%%
 initial_state(_Server) ->
     #server_st{name = _Server, users = [], nicks = [], channels=[]}.

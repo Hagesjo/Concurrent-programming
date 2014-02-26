@@ -78,7 +78,7 @@ loop(St, {leave,_Channel}) ->
 %%%%%%%%%%%%%%%%%%%%%
 loop(St, {msg_from_GUI, _Channel, _Msg}) ->
     case genserver:request(list_to_atom(St#cl_st.server),
-                           {leave, self(), _Channel, St#cl_st.nick}) of
+                           {msg_from_GUI, self(),make_ref(), _Channel, _Msg}) of
         ok  -> {ok, St};
         _ -> {{error, user_not_joined, "You are not in that channel!"}, St}
     end;
