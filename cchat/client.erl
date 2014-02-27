@@ -56,7 +56,7 @@ loop(St, {join,_Channel}) ->
         {{error, user_not_connected, "User not connected"}, St};
     _  -> 
         case genserver:request(list_to_atom(St#cl_st.server),
-                                           {join, self(), _Channel, St#cl_st.nick}) of
+                                           {join, _Channel, St#cl_st.nick}) of
             ok    -> 
                 {ok, St#cl_st{channels = [_Channel | St#cl_st.channels]}};
             user_already_joined ->
@@ -70,11 +70,22 @@ loop(St, {join,_Channel}) ->
 %%%%%%%%%%%%%%%
 loop(St, {leave,_Channel}) ->
         case genserver:request(list_to_atom(St#cl_st.server),
-                                           {leave, self(), _Channel, St#cl_st.nick}) of
+                                           {leave, _Channel, St#cl_st.nick}) of
         ok ->  {ok, St#cl_st{channels = lists:delete(_Channel,St#cl_st.channels)}};
         _ -> {{error, user_not_joined, "You are not in that channel!"}, St}
     end;
 	
+%%%%%%%%%%%%%%%%%%%%%
+%%% Sending messages
+%%%%%%%%%%%%%%%%%%%%%
+loop(St, {msg_from_GUI, _Channel, _Msg}) ->
+    case genserver:request(list_to_atom(St#cl_st.server),
+                           {msg_from_GUI, self(), _Channel, _Msg}) of
+        ok  -> {ok, St};
+        _ -> {{error, user_not_joined, "You are not in that channel!"}, St}
+    end;
+
+
 
 %%%%%%%%%%%%%%
 %%% WhoIam
@@ -107,18 +118,7 @@ loop(St, {nick, _Nick}) ->
 loop(St = #cl_st { gui = GUIName }, _MsgFromClient) ->
     {Channel, Name, Msg} = decompose_msg(_MsgFromClient),
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name++"> "++Msg}),
-    {ok, St};
-
-%%%%%%%%%%%%%%%%%%%%%
-%%% Sending messages
-%%%%%%%%%%%%%%%%%%%%%
-loop(St, {msg_from_GUI, _Channel, _Msg}) ->
-    case genserver:request(list_to_atom(St#cl_st.server),
-                           {msg_from_GUI, self(), St#cl_st.nick, _Channel, _Msg}) of
-        ok  -> {ok, St};
-        _ -> {{error, user_not_joined, "You are not in that channel!"}, St}
-    end.
-
+    {ok, St}.
 
 
 % This function will take a message from the client and
