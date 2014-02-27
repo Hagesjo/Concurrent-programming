@@ -14,7 +14,7 @@ loop(St, {connect, From, _Nick}) ->
                     false -> 
                         {ok, St2};
                     _ ->
-                        {nick_exist, St}
+                        {user_already_connected, St}
                 end;
 			_ ->
                 {user_already_connected, St}
@@ -26,36 +26,27 @@ loop(St, {disconnect, From, _Nick}) ->
                     St2 = St#server_st{users = lists:delete({From,_Nick}, St#server_st.users)},
                     {ok, St2}
         end;
-
 		
-loop(St, {join,  _Channel, _Nick}) ->
+loop(St, {join, From,  _Channel, _Nick}) ->
         case lists:member(_Channel, St#server_st.channels) of
             false ->
-                 Pid = spawn(fun() -> channel([_Nick]) end),
-                 put(_Channel, Pid), 
+                 catch(unregister(list_to_atom(_Channel))),
+                 genserver:start(list_to_atom(_Channel), channel:initial_state(From),
+                                fun channel:loop/2),
                  {ok, St#server_st{channels = [_Channel | St#server_st.channels]}};
             true -> 
-                 get(_Channel)!{join, self(), _Nick}, 
-                 receive
+                 case genserver:request(whereis(list_to_atom(_Channel)), {join, From}) of 
                      ok -> 
                         {ok, St};
                      user_already_joined -> 
                         {user_already_joined, St}
                  end
-                 %get(_Channel) ! {join,Ref, self(), _Nick},
-                 %receive 
-                     %{ok,Ref} -> 
-                        %{ok, St};
-                     %{user_already_joined,Ref} -> 
-                        %{user_already_joined, St}
-                 %end
         end;
 
-loop(St, {leave, _Channel, _Nick}) ->
+loop(St, {leave, From, _Channel, _Nick}) ->
      case lists:member(_Channel, St#server_st.channels) of
-     true ->
-         get(_Channel) ! {leave, self(), _Nick}, 
-         receive
+         true ->
+         case genserver:request(list_to_atom(_Channel), {leave, From}) of
              ok -> 
                 {ok, St};
              user_not_joined -> 
@@ -66,47 +57,12 @@ loop(St, {leave, _Channel, _Nick}) ->
      end;
 
         
-loop(St,{msg_from_GUI, From, _Channel, _Msg}) ->
-    get(_Channel)! 
-        {msg_from_GUI,
-        lists:keyfind(From, 1, St#server_st.users),
-          %erlang:element(2, lists:keyfind(From, 1, St#server_st.users)),
+loop(St,{msg_from_GUI, From, _Channel, _Nick, _Msg}) ->
+    genserver:request(whereis(list_to_atom(_Channel)), {msg_from_GUI, From,
           _Channel,
-          self(), _Msg, St},
-    receive
-        ok -> {ok, St}
-    end.
-
-channel(Nicks) -> 
-
-    receive 
-       {join, From, Nick} -> 
-            case lists:member(Nick, Nicks) of
-                true -> 
-                    From ! user_already_joined,
-                    channel(Nicks);
-                false -> 
-                    From ! ok,
-                    channel([Nick | Nicks])
-            end;
-
-       {leave, From, Nick} ->
-            case lists:member(Nick, Nicks) of
-                false -> 
-                    From ! user_not_joined,
-                    channel(Nicks);
-                true -> 
-                    From ! ok,
-                    channel(lists:delete(Nick, Nicks))
-            end;
-       {msg_from_GUI, From, _Channel, Server, _Msg, St} -> 
-            lists:delete(erlang:element(2, From), Nicks),
-            %[genserver:request((erlang:element(1, N)), {_Channel, From, _Msg}) || N <- Nicks],
-            [genserver:request(erlang:element(1, lists:keyfind(N, 2, St#server_st.users)), {_Channel, From, _Msg}) || N <- Nicks],
-            Server ! ok;
-            %spawn(fun() -> send_messages(Nicks, From, _Msg, _Channel) end),
-        LOL -> erlang:display(LOL)
-    end.
+          _Nick,
+           _Msg}),
+    {ok,St}.
 
 %send_messages([], _, _, _) ->
     %ok;
