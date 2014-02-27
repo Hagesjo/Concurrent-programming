@@ -11,3 +11,5 @@
 % server process. 
 % 
 -record(server_st, {name, users, channels}).
+
+-record(channel_st, {pids}).
