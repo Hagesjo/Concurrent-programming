@@ -7,18 +7,13 @@
 
 
 loop(St, {connect, From, _Nick}) -> 
-        St2 = St#server_st{users = [{From, _Nick} | St#server_st.users]},
-		case lists:member({From, _Nick}, St#server_st.users) of
-            false ->
                 case lists:keyfind(_Nick, 2, St#server_st.users) of
                     false -> 
+                        St2 = St#server_st{users = [{From, _Nick} | St#server_st.users]},
                         {ok, St2};
                     _ ->
                         {user_already_connected, St}
                 end;
-			_ ->
-                {user_already_connected, St}
-		end;
 
 loop(St, {disconnect, From, _Nick}) -> 
         case lists:member({From, _Nick}, St#server_st.users) of
@@ -63,15 +58,6 @@ loop(St,{msg_from_GUI, From, _Channel, _Nick, _Msg}) ->
           _Nick,
            _Msg}),
     {ok,St}.
-
-%send_messages([], _, _, _) ->
-    %ok;
-%send_messages([Client | Clients], From, _Msg, _Channel) ->
-    %case Client of
-        %From -> send_messages(Clients, From, _Msg, _Channel);
-        %_ -> genserver:request(Client, {_Channel, erlang:element(2,lists:keyfind(From, 2, St#server_st.users))}),
-             %send_messages(Clients, From, _Msg)
-    %end.
 
 initial_state(_Server) ->
     #server_st{name = _Server, users = [], channels=[]}.

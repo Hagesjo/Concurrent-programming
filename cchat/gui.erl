@@ -101,10 +101,19 @@ handle_event(#wx{ event = #wxCommand{type = command_text_enter, cmdString = Item
     trace(["Command:", Cmd]),
     case Cmd  of
 
+         %% Connecting to the server (Specifying the remote machine)
+         {connect_remote, Server, Machine} ->
+            write_channel(with_label(ClientName, ?SYSTEM), "* "++"Trying to connect to "++Server++" in machine "++Machine++"..."),
+            Result = catch_fatal (ClientName, Panel, fun () -> request(ClientName, {connect, {Server, Machine}}) end ),
+            case Result of
+                 ok     -> write_channel(with_label(ClientName, ?SYSTEM), "+ Connected!") ;
+                 error  -> ok
+            end ;
+
          %% Connecting to the server
          {connect, Server} ->
             write_channel(with_label(ClientName, ?SYSTEM), "* "++"Trying to connect to "++Server++"..."),
-            Result = catch_fatal (ClientName, Panel, fun () -> request(ClientName, {connect,Server}) end ),
+            Result = catch_fatal (ClientName, Panel, fun () -> request(ClientName, {connect, Server}) end ),
             case Result of
                  ok     -> write_channel(with_label(ClientName, ?SYSTEM), "+ Connected!") ;
                  error  -> ok
@@ -291,7 +300,7 @@ typed_search(ID, Cast) ->
 
 label(ClientID, ID, Widget) ->
     Label = join_ids(ClientID, ID),
-    Result = wxWindow:setId(Widget, Label),
+    _Result = wxWindow:setId(Widget, Label),
     % io:format("Setting label ~p to widget ~p, result ~p~n",[Label,Widget, Result]),
     ok.
 
@@ -315,13 +324,13 @@ channel_id(ChannelName) ->
     list_to_integer(lists:flatten(S)).
 
 % client_id("client_1234") = 1234
-client_id(ClientName) ->
-    {N, _} = string:to_integer(lists:sublist(ClientName,8,5)),
-    N.
+% client_id(ClientName) ->
+%     {N, _} = string:to_integer(lists:sublist(ClientName,8,5)),
+%     N.
 
 %% Requests
 request(ClientName, Msg) ->
-    genserver:request(to_atom(ClientName), Msg).
+    genserver:request(to_atom(ClientName), Msg, 100000). % must be greater than timeout in genserver
 
 
 %% Errors
