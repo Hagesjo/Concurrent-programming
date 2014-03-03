@@ -1,54 +1,42 @@
 -module(server).
 -compile(export_all).
-%-export([loop/2, initial_state/1]).
 
 -include_lib("./defs.hrl").
 
 
+loop(St=#server_st{users = Users}, {connect, From, _Nick}) -> 
+    case lists:keyfind(_Nick, 2, Users) of
+        false -> 
+            St2 = St#server_st{users = [{From, _Nick} | Users]},
+            {ok, St2};
+        _ ->
+            {user_already_connected, St}
+    end;
 
-loop(St, {connect, From, _Nick}) -> 
-                case lists:keyfind(_Nick, 2, St#server_st.users) of
-                    false -> 
-                        St2 = St#server_st{users = [{From, _Nick} | St#server_st.users]},
-                        {ok, St2};
-                    _ ->
-                        {user_already_connected, St}
-                end;
-
-loop(St, {disconnect, From, _Nick}) -> 
-        case lists:member({From, _Nick}, St#server_st.users) of
-            true ->
-                    St2 = St#server_st{users = lists:delete({From,_Nick}, St#server_st.users)},
-                    {ok, St2}
-        end;
+loop(St=#server_st{users = Users}, {disconnect, From, _Nick}) -> 
+    case lists:member({From, _Nick}, Users) of
+        true ->
+                St2 = St#server_st{users = lists:delete({From,_Nick}, Users)},
+                {ok, St2}
+    end;
 		
-loop(St, {join, From,  _Channel, _Nick}) ->
-        case lists:member(_Channel, St#server_st.channels) of
-            false ->
-                 catch(unregister(list_to_atom(_Channel))),
-                 genserver:start(list_to_atom(_Channel), channel:initial_state(From),
-                                fun channel:loop/2),
-                 {ok, St#server_st{channels = [_Channel | St#server_st.channels]}};
-            true -> 
-                 case genserver:request(whereis(list_to_atom(_Channel)), {join, From}) of 
-                     ok -> 
-                        {ok, St};
-                     user_already_joined -> 
-                        {user_already_joined, St}
-                 end
-        end;
+loop(St=#server_st{channels = Channels}, {join, From,  _Channel, _Nick}) ->
+    case lists:member(_Channel, Channels) of
+        false ->
+             catch(unregister(list_to_atom(_Channel))),
+             genserver:start(list_to_atom(_Channel), channel:initial_state(From),
+                            fun channel:loop/2),
+             {ok, St#server_st{channels = [_Channel | Channels]}};
+        true -> 
+             {genserver:request(whereis(list_to_atom(_Channel)), {join, From}), St}
+    end;
 
-loop(St, {leave, From, _Channel, _Nick}) ->
-     case lists:member(_Channel, St#server_st.channels) of
+loop(St=#server_st{channels = Channels}, {leave, From, _Channel, _Nick}) ->
+     case lists:member(_Channel, Channels) of
          true ->
-         case genserver:request(list_to_atom(_Channel), {leave, From}) of
-             ok -> 
-                {ok, St};
-             user_not_joined -> 
-                {user_not_joined, St}
-         end;
-     false ->
-         {user_not_joined, St}
+             {genserver:request(list_to_atom(_Channel), {leave, From}), St};
+         false ->
+             {user_not_joined, St}
      end;
 
         

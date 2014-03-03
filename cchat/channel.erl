@@ -1,6 +1,5 @@
 -module(channel).
 -compile(export_all).
-%-export([loop/2, initial_state/1]).
 
 -include_lib("./defs.hrl").
 
@@ -27,7 +26,6 @@ loop(St=#channel_st{pids = Pids}, {leave, From}) ->
     end;
 
 loop(St=#channel_st{pids = Pids}, {msg_from_GUI, From, _Channel, _Nick, _Msg}) -> 
-    %[genserver:request(F, {_Channel, _Nick, _Msg}) || F <- lists:delete(From, Pids)],
     spawn(fun() -> send_messages(Pids, From, _Nick, _Msg, _Channel) end),
     {ok, St}.
 

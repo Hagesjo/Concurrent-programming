@@ -34,10 +34,6 @@ loop(St, disconnect) ->
             {{error, user_not_connected, "User not connected"}, St};
         _ ->  
             case St#cl_st.channels of
-            %case genserver:request(list_to_atom(St#cl_st.server),
-                                     %{disconnect,
-                                      %self(),
-                                       %St#cl_st.nick}) of
             [] ->
                 St2 = St#cl_st{server = []},
                 {ok,St2 };
@@ -107,13 +103,6 @@ loop(St, {nick, _Nick}) ->
             {{error, nick_change_error, "You cannot change nickname while connected to the server"}, St}
     end;
 
-
-
-%%%%%%%%%%%%%
-%%% Debug
-%%%%%%%%%%%%%
-%		{St, debug} ->
-
 %%%%%%%%%%%%%%%%%%%%%
 %%%% Incoming message
 %%%%%%%%%%%%%%%%%%%%%
@@ -121,13 +110,6 @@ loop(St = #cl_st { gui = GUIName }, _MsgFromClient) ->
     {Channel, Name, Msg} = _MsgFromClient,
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name++"> "++Msg}),
     {ok, St}.
-
-
-% This function will take a message from the client and
-% decomposed in the parts needed to tell the GUI to display
-% it in the right chat room.
-decompose_msg(_MsgFromClient) ->
-    {"", "", ""}.
 
 
 initial_state(Nick, GUIName) ->
