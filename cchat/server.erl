@@ -5,7 +5,7 @@
 
 
 loop(St=#server_st{users = Users}, {connect, From, _Nick}) -> 
-    case lists:keyfind(_Nick, 2, Users) of
+    case lists:keyfind(_Nick, 2, Users) of %%Trying to find the Pid
         false -> 
             St2 = St#server_st{users = [{From, _Nick} | Users]},
             {ok, St2};
@@ -20,6 +20,8 @@ loop(St=#server_st{users = Users}, {disconnect, From, _Nick}) ->
                 {ok, St2}
     end;
 		
+    %Each channel has its own process, which is spawned if the channel is not found
+    %in the State.
 loop(St=#server_st{channels = Channels}, {join, From,  _Channel, _Nick}) ->
     case lists:member(_Channel, Channels) of
         false ->
@@ -31,6 +33,7 @@ loop(St=#server_st{channels = Channels}, {join, From,  _Channel, _Nick}) ->
              {genserver:request(whereis(list_to_atom(_Channel)), {join, From}), St}
     end;
 
+    
 loop(St=#server_st{channels = Channels}, {leave, From, _Channel, _Nick}) ->
      case lists:member(_Channel, Channels) of
          true ->
@@ -40,6 +43,7 @@ loop(St=#server_st{channels = Channels}, {leave, From, _Channel, _Nick}) ->
      end;
 
         
+    %This just passes the broadcasting of a message to the channel-process
 loop(St,{msg_from_GUI, From, _Channel, _Nick, _Msg}) ->
     genserver:request(whereis(list_to_atom(_Channel)), {msg_from_GUI, From,
           _Channel,
@@ -47,5 +51,6 @@ loop(St,{msg_from_GUI, From, _Channel, _Nick, _Msg}) ->
            _Msg}),
     {ok,St}.
 
+    %users = {Pid, Nick}
 initial_state(_Server) ->
     #server_st{name = _Server, users = [], channels=[]}.

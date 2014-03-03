@@ -26,10 +26,12 @@ loop(St=#channel_st{pids = Pids}, {leave, From}) ->
     end;
 
 loop(St=#channel_st{pids = Pids}, {msg_from_GUI, From, _Channel, _Nick, _Msg}) -> 
+    %Spawning a process to take care of the broadcasting
     spawn(fun() -> send_messages(Pids, From, _Nick, _Msg, _Channel) end),
     {ok, St}.
 
 
+    %Recursive function to send to all users in the channel except for the sender
 send_messages([], _, _, _, _) ->
     ok;
 send_messages([Client | Clients], From, _Nick, _Msg, _Channel) ->
