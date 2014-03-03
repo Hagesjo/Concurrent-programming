@@ -27,8 +27,19 @@ loop(St=#channel_st{pids = Pids}, {leave, From}) ->
     end;
 
 loop(St=#channel_st{pids = Pids}, {msg_from_GUI, From, _Channel, _Nick, _Msg}) -> 
-    [genserver:request(F, {_Channel, _Nick, _Msg}) || F <- lists:delete(From, Pids)],
+    %[genserver:request(F, {_Channel, _Nick, _Msg}) || F <- lists:delete(From, Pids)],
+    spawn(fun() -> send_messages(Pids, From, _Nick, _Msg, _Channel) end),
     {ok, St}.
+
+
+send_messages([], _, _, _, _) ->
+    ok;
+send_messages([Client | Clients], From, _Nick, _Msg, _Channel) ->
+    case Client of
+        From -> send_messages(Clients, From, _Nick, _Msg, _Channel);
+        _ -> genserver:request(Client, {_Channel, _Nick, _Msg}),
+             send_messages(Clients, From, _Nick, _Msg, _Channel)
+    end.
 
 initial_state(_Pid) -> 
    #channel_st{pids = [_Pid]}. 
