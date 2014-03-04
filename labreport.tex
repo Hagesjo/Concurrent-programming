@@ -1,0 +1,80 @@
+\documentclass[a4paper]{article}
+\usepackage[swedish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\setlength{\parindent}{0mm}
+\setlength{\itemsep}{0ex}
+\setlength{\parskip}{2ex}
+\setlength{\parsep}{2ex}
+\setlength{\partopsep}{0ex}
+\setlength{\topsep}{0ex}
+
+%---------------------------------------------------------------
+\title{\bf \LARGE Lab report\\
+Digital Design (EDA322)}
+
+%\normalsize{
+  %\begin{tabular}{|l|l|l|}  \hline
+              %& \bf Namn                           & \bf Datum   \\ \hline \hline
+     %Granskad &  &   \\ \hline
+     %Godkänd  &  &   \\ \hline
+  %\end{tabular}}
+\author{Group 6
+\vspace{0.4cm}\\
+Andreas Hagesjö \\ Robert Nyquist}
+\date{Mars 4, 2014}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+%------
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+\setcounter {page}{1}
+\section{Introduction}
+This part will introduce the reader to the report.
+At the beginning, describe what the purpose of this lab report is. Then
+describe briefly what each section discusses and finally summarize the most
+important conclusions.
+
+\section{Method}
+\subsection{Arithmetic and Logic Unit (ALU)}
+Describe what you did in lab 2 and what you have learnt. In addition,
+discuss your findings and observations during this lab. Summarize your an-
+swers to the questions in the lab PM and present the block diagrams that
+you have drawn. Furthermore, describe how your ALU performs subtrac-
+tion using an adder. Remember to always explain your design choices and
+mention any assumptions. Finally, make use of figures and tables.
+\subsection{Top-level Design}
+Describe what you did in lab 3. In addition, describe how you implemented
+the bus using the mux and any extra logic or the tri-state buffers. Describe
+briefly how you implemented the storage elements that are used by the
+ChAcc processor. Show one snapshot of the simulation waveform where you
+write something to a memory location and then read from it. Remember to
+always explain your design choices and mention any assumptions. Finally,
+make use of figures and tables.
+\subsection{Controller}
+Describe what you did in lab4. More specifically, show the Finite-state ma-
+chine (FSM) of the controller by presenting the diagram you drew. Which
+design decisions did you make and why? Also include few waveforms, where
+you show that the controller runs correctly for some particular instructions
+using the provided testbench. Remember to always explain your design
+choices and mention any assumptions. Finally, make use of figures and ta-
+bles.
+\subsection{Processor's Testbench}
+Describe what you did in lab5. More specifically, describe how you made
+the testbench to verify that your processor design was functionally correct.
+For example, you can specify how you generated inputs to the processor
+during the testing, how you were reading the expected outputs and how
+you compare the expected outputs with the actual outputs. Also mention if
+your processor design was working correctly from the beginning and if not
+describe how you backtrack the bugs. Remember to always explain your
+design choices and mention any assumptions. Finally, make use of figures
+and tables.
+\end{document}
+
