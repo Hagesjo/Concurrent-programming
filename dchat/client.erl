@@ -10,52 +10,54 @@
 %%%%%%%%%%%%%%%
 
 loop(St, {connect, {Server, Machine}}) ->
-    case genserver:request({list_to_atom(Server), list_to_atom(Machine)}, {connect, self(), St#cl_st.nick}) of
-        ok ->
-            {ok, St#cl_st{server = Server, machine = Machine}};
-        nick_exist ->
-            {{error, nick_exist, "Nick exist"}, St};			
-        user_already_connected ->
-            {{error, user_already_connected, "User already connected"},St};
-        _ ->
-            {{error, server_not_reached, "Server not reached"},St}
-    end;	
+    case St#cl_st.server of 
+        [] ->    case catch genserver:request({list_to_atom(Server), list_to_atom(Machine)}, {connect, self(), St#cl_st.nick}) of
+            ok ->
+                {ok, St#cl_st{server = Server, machine = Machine}};
+            nick_exist ->
+                {{error, nick_exist, "Nick exist"}, St};			
+            user_already_connected ->
+                {{error, user_already_connected, "User already connected"},St};
+            _ ->
+                {{error, server_not_reached, "Server not reached"},St}
+        end;	
+        _ -> {{error, user_already_connected, "User already connected"}, St}
 
+    end;
 
 loop(St, {connect, _Server}) ->
-    case whereis(list_to_atom(_Server)) of
-        undefined -> {{error,server_not_reached, "Server not reached"}, St};
-        _ ->
-            case genserver:request(list_to_atom(_Server), {connect, self(), St#cl_st.nick}) of
-                ok ->
-                    {ok, St#cl_st{server = _Server}};
-                nick_exist ->
-                    {{error, nick_exist, "Nick exist"}, St};			
-                user_already_connected ->
-                    {{error, user_already_connected, "User already connected"},St};
-                server_not_reached ->
-                    {{error, server_not_reached, "Server not reached"},St}
-            end		
-        end;
+    case St#cl_st.server of
+    [] -> case catch genserver:request({list_to_atom(_Server), node()}, {connect, self(), St#cl_st.nick}) of
+            ok ->
+                {ok, St#cl_st{server = _Server, machine = atom_to_list(node())}};
+            nick_exist ->
+                {{error, nick_exist, "Nick exist"}, St};			
+            user_already_connected ->
+                {{error, user_already_connected, "User already connected"},St};
+            _ ->
+                {{error, server_not_reached, "Server not reached"},St}
+            end;
+    _ -> {{error, user_already_connected, "User already connected"}, St}
+    end;
 					
 
 %%%%%%%%%%%%%%%
 %%%% Disconnect
 %%%%%%%%%%%%%%%
-loop(St=#cl_st{server = Server, machine = Machine, nick= Nick}, disconnect) ->
-    case St#cl_st.server of
+loop(St=#cl_st{server = Server, machine = Machine, nick= Nick, channels = Channel}, disconnect) ->
+    case Server of
         [] ->  
             {{error, user_not_connected, "User not connected"}, St};
         _ ->  
-            case St#cl_st.channels of
+            case Channel of
             [] ->
-                St2 = St#cl_st{server = [], machine = []},
                 genserver:request({list_to_atom(Server), list_to_atom(Machine)}, {disconnect, self(), Nick}),
-                {ok,St2 };
+                {ok, St#cl_st{server = [], machine = []}};
             _ ->
                 {{error, leave_channels_first, "Leave all channels first"}, St}
         end
    end;
+        
         
         
 
@@ -128,4 +130,4 @@ loop(St = #cl_st { gui = GUIName }, _MsgFromClient) ->
 
 
 initial_state(Nick, GUIName) ->
-    #cl_st { gui = GUIName ,server=[],nick=Nick, channels=[]}.
+    #cl_st { gui = GUIName ,server=[], machine=[],nick=Nick, channels=[]}.

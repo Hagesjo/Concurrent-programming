@@ -37,7 +37,7 @@ send_messages([], _, _, _, _) ->
 send_messages([Client | Clients], From, _Nick, _Msg, _Channel) ->
     case Client of
         From -> send_messages(Clients, From, _Nick, _Msg, _Channel);
-        _ -> genserver:request(Client, {_Channel, _Nick, _Msg}),
+        _ -> spawn(fun() -> genserver:request(Client, {_Channel, _Nick, _Msg}) end),
              send_messages(Clients, From, _Nick, _Msg, _Channel)
     end.
 
