@@ -8,6 +8,20 @@
 %%%%%%%%%%%%%%%
 %%%% Connect
 %%%%%%%%%%%%%%%
+
+loop(St, {connect, {Server, Machine}}) ->
+    case genserver:request({list_to_atom(Server), list_to_atom(Machine)}, {connect, self(), St#cl_st.nick}) of
+        ok ->
+            {ok, St#cl_st{server = Server, machine = Machine}};
+        nick_exist ->
+            {{error, nick_exist, "Nick exist"}, St};			
+        user_already_connected ->
+            {{error, user_already_connected, "User already connected"},St};
+        _ ->
+            {{error, server_not_reached, "Server not reached"},St}
+    end;	
+
+
 loop(St, {connect, _Server}) ->
     case whereis(list_to_atom(_Server)) of
         undefined -> {{error,server_not_reached, "Server not reached"}, St};
@@ -28,14 +42,15 @@ loop(St, {connect, _Server}) ->
 %%%%%%%%%%%%%%%
 %%%% Disconnect
 %%%%%%%%%%%%%%%
-loop(St, disconnect) ->
+loop(St=#cl_st{server = Server, machine = Machine, nick= Nick}, disconnect) ->
     case St#cl_st.server of
         [] ->  
             {{error, user_not_connected, "User not connected"}, St};
         _ ->  
             case St#cl_st.channels of
             [] ->
-                St2 = St#cl_st{server = []},
+                St2 = St#cl_st{server = [], machine = []},
+                genserver:request({list_to_atom(Server), list_to_atom(Machine)}, {disconnect, self(), Nick}),
                 {ok,St2 };
             _ ->
                 {{error, leave_channels_first, "Leave all channels first"}, St}
@@ -47,12 +62,12 @@ loop(St, disconnect) ->
 %%%%%%%%%%%%%%
 %%% Join
 %%%%%%%%%%%%%%
-loop(St, {join,_Channel}) ->
+loop(St=#cl_st{server = Server, machine = Machine}, {join,_Channel}) ->
     case St#cl_st.server of
     [] ->
         {{error, user_not_connected, "User not connected"}, St};
     _  -> 
-        case genserver:request(list_to_atom(St#cl_st.server),
+        case genserver:request({list_to_atom(Server), list_to_atom(Machine)},
                                            {join, self(), _Channel, St#cl_st.nick}) of
             ok    -> 
                 {ok, St#cl_st{channels = [_Channel | St#cl_st.channels]}};
@@ -65,8 +80,8 @@ loop(St, {join,_Channel}) ->
 %%%%%%%%%%%%%%%
 %%%% Leave
 %%%%%%%%%%%%%%%
-loop(St, {leave,_Channel}) ->
-        case genserver:request(list_to_atom(St#cl_st.server),
+loop(St=#cl_st{server = Server, machine = Machine}, {leave,_Channel}) ->
+        case genserver:request({list_to_atom(Server), list_to_atom(Machine)},
                                            {leave, self(), _Channel, St#cl_st.nick}) of
         ok ->  {ok, St#cl_st{channels = lists:delete(_Channel,St#cl_st.channels)}};
         _ -> {{error, user_not_joined, "You are not in that channel!"}, St}
@@ -75,9 +90,9 @@ loop(St, {leave,_Channel}) ->
 %%%%%%%%%%%%%%%%%%%%%
 %%% Sending messages
 %%%%%%%%%%%%%%%%%%%%%
-loop(St=#cl_st{channels = Channels}, {msg_from_GUI, _Channel, _Msg}) ->
+loop(St=#cl_st{server = Server, machine = Machine, channels = Channels}, {msg_from_GUI, _Channel, _Msg}) ->
     case lists:member(_Channel, Channels) of
-        true -> genserver:request(list_to_atom(St#cl_st.server),
+        true -> genserver:request({list_to_atom(Server), list_to_atom(Machine)},
                            {msg_from_GUI, self(), _Channel, St#cl_st.nick, _Msg}),
             {ok, St};
         false -> {{error, user_not_joined, "You are not in that channel!"}, St}
