@@ -3,6 +3,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
+\usepackage{float}
 \setlength{\parindent}{0mm}
 \setlength{\itemsep}{0ex}
 \setlength{\parskip}{2ex}
@@ -41,13 +42,6 @@ This report descibes the creation of a simple processor, the ChAcc processor, us
 It will discuss the difficulties of the making of the processor.
 Each section will describe the different steps that we did during the creation. The sections will also describe the different modules of the processor along with the testing and troubleshooting of the modules.
 
-
-
-This part will introduce the reader to the report.
-At the beginning, describe what the purpose of this lab report is. Then
-describe briefly what each section discusses and finally summarize the most
-important conclusions.
-
 \section{Method}
 \subsection{Arithmetic and Logic Unit (ALU)}
 
@@ -63,11 +57,22 @@ In lab 2, the goal was to successfully make a working ALU. To do that, we needed
 
 \subsubsection{RCA}
 We started off with making the RCA. It contained 8 Full Adders.
-The block diagram for a Full Adder looked like this:\\
-BILDHÄR\\
 
+
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[scale=0.5]{HAFA}
+ \caption{Full adder block diagram}
+\end{figure}
+\newpage
 The Full Adders were connected like this:\\
-LOLBILDHÄR\\
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[scale=0.3]{RCA}
+ \caption{RCA made from FA blocks}
+\end{figure}
 
 We designed it like this since this was the only logic way of using the FA:s as a RCA. 
 When doing the RCA, we learned how to use portmaps and how signals work in VHDL.
@@ -82,6 +87,7 @@ The multiplexer were implemented with a simple \emph{case}, which just decided w
 
 \subsubsection{ALU}
 Four operations was supported:\\
+\begin{center}
 \begin{tabular} {|l|l|} \hline
 operation & Operation \\
 \hline 00 & Add  \\
@@ -90,6 +96,7 @@ operation & Operation \\
 \hline 11 & NOT \\
 \hline
 \end{tabular}
+\end{center}
 
 The interesting part is the subtraction. In that case, we inverted in-signal B, and added insignal A and the inverted B with the carry set. This resulting in adding in-signal A with the twocomplement of in-signal B, which is the same thing as subtraction.
 Since the operation for Add was 00, and for Sub was 01, it was easy to decide when to use a carry-in for the RCA; it was the same as the LSB of the operation-code.
@@ -129,7 +136,12 @@ The memory had a data-in-signal which contained the data you wanted to write to 
 The data memory had an write enable (WE) signal that had to be set to write to the memory.
 The instruction memory still had the WE, but it is never set since it is only required to read from it, and not write to it.
 
-			BILD!!!!!!!!!!!!!!!!!!
+\begin{figure}[H]
+ \centering
+ \includegraphics[scale=0.3]{lab3}
+ \caption{Memory read/write test}
+\end{figure}
+			
 
 \subsubsection{The bus}
 
@@ -137,6 +149,7 @@ The bus was implemented using the mux module from lab2.
 Four muxes were used, each giving the bus a different output.\\
 
 The following signal gave the following output on the bus:\\
+\begin{center}
 \begin{tabular} {|c|c|} \hline
 Signal & Output on bus \\
 \hline im2bus & addrFromInstruction\\
@@ -145,22 +158,11 @@ Signal & Output on bus \\
 \hline ext2bus & extIn\\
 \hline
 \end{tabular}
+\end{center}
 
 If two or more signals were set at the same time an error output is set on the bus. This is to prevent several outputs to the bus at the same time.\\
 \\
 With these new modules we were able to write all the port maps to create the processor, except for the controller.
-
-
-
-
-Describe what you did in lab 3. In addition, describe how you implemented
-the bus using the mux and any extra logic or the tri-state buffers. Describe
-briefly how you implemented the storage elements that are used by the
-ChAcc processor. Show one snapshot of the simulation waveform where you
-write something to a memory location and then read from it. Remember to
-always explain your design choices and mention any assumptions. Finally,
-make use of figures and tables.
-
 
 \subsection{Controller}
 The controller consisted of 3 processes:
@@ -171,12 +173,20 @@ The controller consisted of 3 processes:
 \end{itemize}
 
 To design the second process, we had to draw a state diagram for the controller:\\
-LOLBILD\\
+
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.3]{FSM}
+\caption{State diagram}
+\end{figure}
+
 
 When looking at this state diagram, it was much easier to see how we were supposed to design this process.
 
 When designing the third process, a table of flags depending on what state and opcode was provided. But this table wasn't easy enough to follow, so we made our own table, which made much more sense:
-
+\begin{center}
 \begin{tabular}{|c|c|c|c|c|c|c|c|} \hline
  & FE & DE & DE* & EX & ME & ALLSTATES & aluMd\\
 \hline 0000 && dataLd && \parbox{1.2cm}{pcLd, FlagLd, accLd, dmRd} &&& 00\\
@@ -197,6 +207,7 @@ When designing the third process, a table of flags depending on what state and o
 \hline 1111 &&&& pcLd, dispLd &&& 00\\
  \hline
 \end{tabular}
+\end{center}
 
 \subsubsection{Troubleshooting}
 At first, the resulting datamemory didn't make sense at all, it seemed like nothing worked. After an hour of troubleshooting, we found that we forgot to initiate our data memory to read from the data\_mem file, so it defaulted to read from the instr\_mem, which made everything completely wrong.
@@ -216,15 +227,11 @@ Then, step by step, when went back in our modules, trying to find what we made w
 We ran new tests with do-files on every module, trying to find our error.
 After hours of testing and troubleshooting, we realized that we missed some logic in opcode 1111 in our controller. We had missed to check the state, so the flags were always set during that opcode, no matter what state the processor was in, which messed up everything.
 
-Describe what you did in lab5. More specifically, describe how you made
-the testbench to verify that your processor design was functionally correct.
-For example, you can specify how you generated inputs to the processor
-during the testing, how you were reading the expected outputs and how
-you compare the expected outputs with the actual outputs. Also mention if
-your processor design was working correctly from the beginning and if not
-describe how you backtrack the bugs. Remember to always explain your
-design choices and mention any assumptions. Finally, make use of figures
-and tables.
+\begin{figure}[H]
+ \centering
+ \includegraphics[scale=0.4]{lab4}
+ \caption{Testbench result}
+\end{figure}
 
 \subsection{Analysis}
 
