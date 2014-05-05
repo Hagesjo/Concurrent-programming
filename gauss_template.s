@@ -32,46 +32,62 @@ eliminate:
 		swc1	$f8, one
 		swc1	$f9, zero
 		li	$t0, 0
-		li	$t1, 0
+loop1:		li	$t1, 0
 		li	$t2, 0
-loop1:		sw	$t0, 0($a2)	#store k as argument
-		sw	$t0, 0($a3)	
+		sw	$t0, 0($a2)	#store k as argument
+		sw	$t0, 0($a3)
+		nop	
 		jal	getelem
 		sw	$v0, 0($t3)	#Store kk address
 		mov.s	$f10, $f0	#Store kk float
 		addi	$t1, $t0, 1	#j=k+1
 		addi	$t2, $t0, 1	#i=k+1
 loop2:		sw	$t1, 0($a3)	#Store j as argument
+		nop
 		jal	getelem		
 		div.s	$f0, $f0, $f10	#float division
+		nop
 		swc1	$f0, 0($v0)	#store div float to matrix
 		addi	$t1, $t1, 1	#j=j+1
+		nop
 		bne	$t1, $a1, loop2	#end of loop2
+		nop
 		swc1	$f8, 0($t3)	#set A[K][K] to one
 loop3:		sw	$t2, 0($a2)	#store i as argument
 		sw	$t0, 0($a3)	#store k as argument
+		nop
 		jal	getelem
 		sw	$v0, 0($t4)	#store ik address
 		mov.s	$f11, $f0	#store ik float
 loop4:		sw	$t2, 0($a2)	#store i as argument
 		sw	$t1, 0($a3)	#stote j as argument
+		nop
 		jal	getelem
 		sw	$v0, 0($t5)	#store ij address
 		mov.s	$f12, $f0	#store ij float
 		sw	$t0, 0($a2)	#store k as argument
+		nop
 		jal	getelem
 		sw	$v0, 0($t6)	#store kj address
 		mov.s	$f13, $f0	#store kj float
 		mul.s	$f20, $f11, $f13 #ik*kj
+		nop
 		sub.s	$f21, $f12, $f20 #ij-(ik*kj)
+		nop
 		swc1	$f21, 0($t5)	#set A[i][j] = A[i][j]-A[i][k] * A[k][j];
 		addi	$t1, $t1, 1	#j=j+1
+		nop
 		bne	$t1, $a1, loop4	#end of loop4
+		nop
 		swc1	$f9, 0($t4)	#set A[i][k] to zero
 		addi	$t2, $t2, 1	#i=i+1
+		nop
 		bne	$t2, $a1, loop3	#end of loop3
+		addi	$t1, $t0, 1
 		addi	$t0, $t0, 1	#k=k+1
+		nop
 		bne	$t0, $a1, loop1	#end of loop1
+		nop
 		
 			
 		
